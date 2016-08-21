@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">HelloSdlAndroid</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_postos_disponiveis">PostosDisponiveis</string>
+    <string name="title_activity_dados_posto">DadosPosto</string>
+    <string name="title_activity_avalia_posto">AvaliaPosto</string>
+</resources>
