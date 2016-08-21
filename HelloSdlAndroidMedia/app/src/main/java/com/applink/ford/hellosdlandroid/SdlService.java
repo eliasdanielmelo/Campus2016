@@ -64,6 +64,7 @@ import com.smartdevicelink.proxy.rpc.PutFileResponse;
 import com.smartdevicelink.proxy.rpc.ReadDIDResponse;
 import com.smartdevicelink.proxy.rpc.ResetGlobalPropertiesResponse;
 import com.smartdevicelink.proxy.rpc.ScrollableMessageResponse;
+import com.smartdevicelink.proxy.rpc.SendLocation;
 import com.smartdevicelink.proxy.rpc.SendLocationResponse;
 import com.smartdevicelink.proxy.rpc.SetAppIconResponse;
 import com.smartdevicelink.proxy.rpc.SetDisplayLayoutResponse;
@@ -106,1088 +107,1150 @@ import java.util.Vector;
 
 public class SdlService extends Service implements IProxyListenerALM {
 
-	private static final String TAG 					= "SDL Service";
+    private static final String TAG                = "SDL Service";
 
-	private static final String APP_NAME 				= "Campus Ford";
-	private static final String APP_ID 					= "260537589";
-	
-	private static final String ICON_FILENAME 			= "hello_sdl_icon.png";
-	private int iconCorrelationId;
+    private static final String APP_NAME            = "Campus Ford";
+    private static final String APP_ID                 = "260537589";
 
-	MediaPlayer mediaPlayer;
+    private static final String ICON_FILENAME        = "hello_sdl_icon.png";
+    private int iconCorrelationId;
 
-	List<String> remoteFiles;
-	
-	private static final String WELCOME_SHOW 			= "Bem-Vindo ao Aplicativo Ford";
-	private static final String WELCOME_SPEAK 			= "Bem Vindo ao Aplicativo Ford";
-	
-	private static final String TEST_COMMAND_NAME1 		= "Mensagem";
-	private static final String TEST_COMMAND_NAME2 		= "Interação";
-	private static final String TEST_COMMAND_NAME3 		= "Alerta";
-	private static final String TEST_COMMAND_NAME4 		= "Display";
+    MediaPlayer mediaPlayer;
 
-	private static final int SUBMENU_1 = 100;
-	private static final int COMMAND_1 = 5;
+    List<String> remoteFiles;
 
-	private static final int TEST_COMMAND_ID1 			= 1;
-	private static final int TEST_COMMAND_ID2 			= 2;
-	private static final int TEST_COMMAND_ID3 			= 3;
-	private static final int TEST_COMMAND_ID4 			= 4;
+    private static final String WELCOME_SHOW         = "Bem-Vindo ao Aplicativo AchePosto";
+    private static final String WELCOME_SPEAK        = "Bem Vindo ao Aplicativo AchePosto";
 
-	private static final int performCorID = 101;
+    private static final String TEST_COMMAND_NAME1        = "Home";
+    private static final String TEST_COMMAND_NAME2        = "Buscar Posto";
+    private static final String TEST_COMMAND_NAME3        = "Sobre";
+    private static final String TEST_COMMAND_NAME4        = "Display";
 
-	private String speed;
+    private static final int SUBMENU_1 = 100;
+    private static final int COMMAND_1 = 5;
+
+    private static final int TEST_COMMAND_ID1        = 1;
+    private static final int TEST_COMMAND_ID2        = 2;
+    private static final int TEST_COMMAND_ID3        = 3;
+    private static final int TEST_COMMAND_ID4        = 4;
+
+    private static final int performCorID = 101;
+
+    private String speed;
 
     // Conenction management
-	private static final int CONNECTION_TIMEOUT = 180 * 1000;
+    private static final int CONNECTION_TIMEOUT = 180 * 1000;
     private Handler mConnectionHandler = new Handler(Looper.getMainLooper());
 
-	// variable used to increment correlation ID for every request sent to SYNC
-	public int autoIncCorrId = 0;
-	// variable to contain the current state of the service
-	private static SdlService instance = null;
+    // variable used to increment correlation ID for every request sent to SYNC
+    public int autoIncCorrId = 0;
+    // variable to contain the current state of the service
+    private static SdlService instance = null;
 
-	// variable to create and call functions of the SyncProxy
-	private SdlProxyALM proxy = null;
+    // variable to create and call functions of the SyncProxy
+    private SdlProxyALM proxy = null;
 
-	private boolean firstNonHmiNone = true;
-	private boolean isVehicleDataSubscribed = false;
-	
-	
-	
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
-	}
+    private boolean firstNonHmiNone = true;
+    private boolean isVehicleDataSubscribed = false;
 
-	@Override
-	public void onCreate() {
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onCreate() {
         Log.d(TAG, "onCreate");
-		super.onCreate();
-		mediaPlayer = new MediaPlayer();
-		instance = this;
-		remoteFiles = new ArrayList<>();
-	}
+        super.onCreate();
+        instance = this;
+        remoteFiles = new ArrayList<>();
+    }
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         startProxy();
-		Log.d(TAG, "onStartCommand");
+        Log.d(TAG, "onStartCommand");
         mConnectionHandler.postDelayed(mCheckConnectionRunnable, CONNECTION_TIMEOUT);
 
-		return START_STICKY;
-	}
+        return START_STICKY;
+    }
 
-	@Override
-	public void onDestroy() {
-		disposeSyncProxy();
-		Log.d(TAG, "onDestroy");
-		instance = null;
-		super.onDestroy();
-	}
+    @Override
+    public void onDestroy() {
+        disposeSyncProxy();
+        Log.d(TAG, "onDestroy");
+        instance = null;
+        super.onDestroy();
+    }
 
-	public void SintonizaRadio(String StreamMusiPath){
-		if(mediaPlayer.isPlaying()){
-			mediaPlayer.release();
-			mediaPlayer = new MediaPlayer();
-			mediaPlayer.reset();
-		}
+    public void falaPostos(){
 
-		try {
-			String streamPath = StreamMusiPath;
-			mediaPlayer.setDataSource(streamPath);
-			try {
-				mediaPlayer.prepare();
-			} catch (MalformedURLException ex) {
-				throw new RuntimeException("Errro na URL! " + ex);
-			} catch (IllegalStateException ex) {
-			} catch (IllegalArgumentException ex) {
-				throw new RuntimeException("Errro na URL! " + ex);
-			}
-			mediaPlayer.start();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    }
 
-	}
+    public void SintonizaRadio(String StreamMusiPath){
+        if(mediaPlayer.isPlaying()){
+            mediaPlayer.release();
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.reset();
+        }
+
+        try {
+            String streamPath = StreamMusiPath;
+            mediaPlayer.setDataSource(streamPath);
+            try {
+                mediaPlayer.prepare();
+            } catch (MalformedURLException ex) {
+                throw new RuntimeException("Errro na URL! " + ex);
+            } catch (IllegalStateException ex) {
+            } catch (IllegalArgumentException ex) {
+                throw new RuntimeException("Errro na URL! " + ex);
+            }
+            mediaPlayer.start();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
 
 
-	public static SdlService getInstance() {
-		return instance;
-	}
+    public static SdlService getInstance() {
+        return instance;
+    }
 
-	public SdlProxyALM getProxy() {
-		return proxy;
-	}
+    public SdlProxyALM getProxy() {
+        return proxy;
+    }
 
-	public void startProxy() {
+    public void startProxy() {
 
         Log.i(TAG, "Trying to start proxy");
-		if (proxy == null) {
-			try {
+        if (proxy == null) {
+            try {
                 Log.i(TAG, "Starting SDL Proxy");
-				proxy = new SdlProxyALM(this, APP_NAME, true, APP_ID);
-			} catch (SdlException e) {
-				e.printStackTrace();
-				// error creating proxy, returned proxy = null
-				if (proxy == null) {
-					stopSelf();
-				}
-			}
-		}
-	}
+                proxy = new SdlProxyALM(this, APP_NAME, false, APP_ID);
+            } catch (SdlException e) {
+                e.printStackTrace();
+                // error creating proxy, returned proxy = null
+                if (proxy == null) {
+                    stopSelf();
+                }
+            }
+        }
+    }
 
-	public void disposeSyncProxy() {
-		LockScreenActivity.updateLockScreenStatus(LockScreenStatus.OFF);
+    public void disposeSyncProxy() {
+        LockScreenActivity.updateLockScreenStatus(LockScreenStatus.OFF);
 
-		if (proxy != null) {
-			try {
-				proxy.dispose();
-			} catch (SdlException e) {
-				e.printStackTrace();
-			}
-			proxy = null;
+        if (proxy != null) {
+            try {
+                proxy.dispose();
+            } catch (SdlException e) {
+                e.printStackTrace();
+            }
+            proxy = null;
 
-		}
-		this.firstNonHmiNone = true;
-		this.isVehicleDataSubscribed = false;
-		
-	}
+        }
+        this.firstNonHmiNone = true;
+        this.isVehicleDataSubscribed = false;
 
-	public void reset() {
-		if (proxy != null) {
-			try {
-				proxy.resetProxy();
-				this.firstNonHmiNone = true;
-				this.isVehicleDataSubscribed = false;
-			} catch (SdlException e1) {
-				e1.printStackTrace();
-				//something goes wrong, & the proxy returns as null, stop the service.
-				// do not want a running service with a null proxy
-				if (proxy == null) {
-					stopSelf();
-				}
-			}
-		} else {
-			startProxy();
-		}
-	}
+    }
 
-	public void subButtons() {
-		try {
-			proxy.subscribeButton(ButtonName.OK, autoIncCorrId++);
-			//proxy.subscribeButton(ButtonName.SEEKLEFT, autoIncCorrId++);
-			//proxy.subscribeButton(ButtonName.SEEKRIGHT, autoIncCorrId++);
-			proxy.subscribeButton(ButtonName.TUNEUP, autoIncCorrId++);
-			proxy.subscribeButton(ButtonName.TUNEDOWN, autoIncCorrId++);
-		} catch (SdlException e) {
-		}
-	}
+    public void reset() {
+        if (proxy != null) {
+            try {
+                proxy.resetProxy();
+                this.firstNonHmiNone = true;
+                this.isVehicleDataSubscribed = false;
+            } catch (SdlException e1) {
+                e1.printStackTrace();
+                //something goes wrong, & the proxy returns as null, stop the service.
+                // do not want a running service with a null proxy
+                if (proxy == null) {
+                    stopSelf();
+                }
+            }
+        } else {
+            startProxy();
+        }
+    }
 
-	/**
-	 * Will show a sample test message on screen as well as speak a sample test message
-	 */
-	public void showscrollablemessage(){
-		try {
-			proxy.scrollablemessage("O entrelaçamento quântico (ou emaranhamento quântico, como é mais conhecido na comunidade científica) é +" +
-					"um fenômeno da mecânica quântica que permite que dois ou mais objetos estejam de alguma forma tão ligados que um objeto não +" +
-					"possa ser corretamente descrito sem que a sua contra-parte seja mencionada - mesmo que os objetos possam estar espacialmente +" +
-					"separados por milhões de anos-luz.",30000,null, autoIncCorrId++);
-		} catch (SdlException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 *  Add commands for the app on SDL.
-	 */
-	public void sendCommands1(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME1);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID1);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME1}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands2(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME2);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID2);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME2}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands3(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME3);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID3);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME3}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands4(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME4);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID4);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME4}));
-		sendRpcRequest(command);
-	}
+    public void subButtons() {
+        try {
+//       proxy.subscribeButton(ButtonName.OK, autoIncCorrId++);
+            //proxy.subscribeButton(ButtonName.SEEKLEFT, autoIncCorrId++);
+            //proxy.subscribeButton(ButtonName.SEEKRIGHT, autoIncCorrId++);
+            proxy.subscribeButton(ButtonName.TUNEUP, autoIncCorrId++);
+            proxy.subscribeButton(ButtonName.TUNEDOWN, autoIncCorrId++);
+        } catch (SdlException e) {
+        }
+    }
 
-	public void addCommandsSub() {
+    /**
+     * Will show a sample test message on screen as well as speak a sample test message
+     */
+    public void showscrollablemessage(){
+        try {
+            proxy.scrollablemessage("O entrelaçamento quântico (ou emaranhamento quântico, como é mais conhecido na comunidade científica) é +" +
+                    "um fenômeno da mecânica quântica que permite que dois ou mais objetos estejam de alguma forma tão ligados que um objeto não +" +
+                    "possa ser corretamente descrito sem que a sua contra-parte seja mencionada - mesmo que os objetos possam estar espacialmente +" +
+                    "separados por milhões de anos-luz.",30000,null, autoIncCorrId++);
+        } catch (SdlException e) {
+            e.printStackTrace();
+        }
+    }
 
-		AddSubMenu submenu = new AddSubMenu();
-		submenu.setMenuName("SubMenu");
-		submenu.setPosition(0);
-		submenu.setMenuID(SUBMENU_1);
-		submenu.setCorrelationID(autoIncCorrId++);
+    /**
+     *  Add commands for the app on SDL.
+     */
+    public void sendCommands1()
+    {
+        AddCommand command;
+        MenuParams params = new MenuParams();
+        params.setMenuName(TEST_COMMAND_NAME1);
+        command = new AddCommand();
+        command.setCmdID(TEST_COMMAND_ID1);
+        command.setMenuParams(params);
+        command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME1, "Início"}));
+        sendRpcRequest(command);
+    }
+    public void sendCommands2(){
+        AddCommand command;
+        MenuParams params = new MenuParams();
+        params.setMenuName(TEST_COMMAND_NAME2);
+        command = new AddCommand();
+        command.setCmdID(TEST_COMMAND_ID2);
+        command.setMenuParams(params);
+        command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME2, "Abastecer"}));
+        sendRpcRequest(command);
+    }
+    public void sendCommands3(){
+        AddCommand command;
+        MenuParams params = new MenuParams();
+        params.setMenuName(TEST_COMMAND_NAME3);
+        command = new AddCommand();
+        command.setCmdID(TEST_COMMAND_ID3);
+        command.setMenuParams(params);
+        command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME3}));
+        sendRpcRequest(command);
+    }
+    public void sendCommands4(){
+        AddCommand command;
+        MenuParams params = new MenuParams();
+        params.setMenuName(TEST_COMMAND_NAME4);
+        command = new AddCommand();
+        command.setCmdID(TEST_COMMAND_ID4);
+        command.setMenuParams(params);
+        command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME4}));
+        sendRpcRequest(command);
+    }
 
-		try {
-			proxy.sendRPCRequest(submenu);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
-		}
-	}
+    public void addCommandsSub() {
 
-	/**
-	 * Sends an RPC Request to the connected head unit. Automatically adds a correlation id.
-	 * @param request
-	 */
-	private void sendRpcRequest(RPCRequest request){
-		request.setCorrelationID(autoIncCorrId++);
-		try {
-			proxy.sendRPCRequest(request);
-		} catch (SdlException e) {
-			e.printStackTrace();
-		}
-	}
-	/**
-	 * Sends the app icon through the uploadImage method with correct params
-	 * @throws SdlException
-	 */
-	private void sendIcon() throws SdlException {
-		iconCorrelationId = autoIncCorrId++;
-		uploadImage(R.drawable.ic_launcher, ICON_FILENAME, iconCorrelationId, true);
-	}
-	
-	/**
-	 * This method will help upload an image to the head unit
-	 * @param resource the R.drawable.__ value of the image you wish to send
-	 * @param imageName the filename that will be used to reference this image
-	 * @param correlationId the correlation id to be used with this request. Helpful for monitoring putfileresponses
-	 * @param isPersistent tell the system if the file should stay or be cleared out after connection.
-	 */
-	private void uploadImage(int resource, String imageName,int correlationId, boolean isPersistent){
-		PutFile putFile = new PutFile();
-		putFile.setFileType(FileType.GRAPHIC_PNG);
-		putFile.setSdlFileName(imageName);
-		putFile.setCorrelationID(correlationId);
-		putFile.setPersistentFile(isPersistent);
-		putFile.setSystemFile(false);
-		putFile.setBulkData(contentsOfResource(resource));
+        AddSubMenu submenu = new AddSubMenu();
+        submenu.setMenuName("SubMenu");
+        submenu.setPosition(0);
+        submenu.setMenuID(SUBMENU_1);
+        submenu.setCorrelationID(autoIncCorrId++);
 
-		try {
-			proxy.sendRPCRequest(putFile);
-		} catch (SdlException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Helper method to take resource files and turn them into byte arrays
-	 * @param resource Resource file id.
-	 * @return Resulting byte array.
-	 */
-	private byte[] contentsOfResource(int resource) {
-		InputStream is = null;
-		try {
-			is = getResources().openRawResource(resource);
-			ByteArrayOutputStream os = new ByteArrayOutputStream(is.available());
-			final int bufferSize = 4096;
-			final byte[] buffer = new byte[bufferSize];
-			int available;
-			while ((available = is.read(buffer)) >= 0) {
-				os.write(buffer, 0, available);
-			}
-			return os.toByteArray();
-		} catch (IOException e) {
-			Log.w("SDL Service", "Can't read icon file", e);
-			return null;
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+        try {
+            proxy.sendRPCRequest(submenu);
+        } catch (SdlException e) {
+            Log.i(TAG,"sync exception");
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public void onProxyClosed(String info, Exception e, SdlDisconnectedReason reason) {
+    /**
+     * Sends an RPC Request to the connected head unit. Automatically adds a correlation id.
+     * @param request
+     */
+    private void sendRpcRequest(RPCRequest request){
+        request.setCorrelationID(autoIncCorrId++);
+        try {
+            proxy.sendRPCRequest(request);
+        } catch (SdlException e) {
+            e.printStackTrace();
+        }
+    }
+    /**
+     * Sends the app icon through the uploadImage method with correct params
+     * @throws SdlException
+     */
+    private void sendIcon() throws SdlException {
+        iconCorrelationId = autoIncCorrId++;
+        uploadImage(R.drawable.ic_launcher, ICON_FILENAME, iconCorrelationId, true);
+    }
 
-		if(!(e instanceof SdlException)){
-			Log.v(TAG, "reset proxy in onproxy closed");
-			reset();
-		}
-		else if ((((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.SDL_PROXY_CYCLED))
-		{
-			if (((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.BLUETOOTH_DISABLED) 
-			{
-				Log.v(TAG, "reset proxy in onproxy closed");
-				reset();
-			}
-		}
+    /**
+     * This method will help upload an image to the head unit
+     * @param resource the R.drawable.__ value of the image you wish to send
+     * @param imageName the filename that will be used to reference this image
+     * @param correlationId the correlation id to be used with this request. Helpful for monitoring putfileresponses
+     * @param isPersistent tell the system if the file should stay or be cleared out after connection.
+     */
+    private void uploadImage(int resource, String imageName,int correlationId, boolean isPersistent){
+        PutFile putFile = new PutFile();
+        putFile.setFileType(FileType.GRAPHIC_PNG);
+        putFile.setSdlFileName(imageName);
+        putFile.setCorrelationID(correlationId);
+        putFile.setPersistentFile(isPersistent);
+        putFile.setSystemFile(false);
+        putFile.setBulkData(contentsOfResource(resource));
+
+        try {
+            proxy.sendRPCRequest(putFile);
+        } catch (SdlException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Helper method to take resource files and turn them into byte arrays
+     * @param resource Resource file id.
+     * @return Resulting byte array.
+     */
+    private byte[] contentsOfResource(int resource) {
+        InputStream is = null;
+        try {
+            is = getResources().openRawResource(resource);
+            ByteArrayOutputStream os = new ByteArrayOutputStream(is.available());
+            final int bufferSize = 4096;
+            final byte[] buffer = new byte[bufferSize];
+            int available;
+            while ((available = is.read(buffer)) >= 0) {
+                os.write(buffer, 0, available);
+            }
+            return os.toByteArray();
+        } catch (IOException e) {
+            Log.w("SDL Service", "Can't read icon file", e);
+            return null;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onProxyClosed(String info, Exception e, SdlDisconnectedReason reason) {
+
+        if(!(e instanceof SdlException)){
+            Log.v(TAG, "reset proxy in onproxy closed");
+            reset();
+        }
+        else if ((((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.SDL_PROXY_CYCLED))
+        {
+            if (((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.BLUETOOTH_DISABLED)
+            {
+                Log.v(TAG, "reset proxy in onproxy closed");
+                reset();
+            }
+        }
 
 
-		stopSelf();
-	}
+        stopSelf();
+    }
 
-	@Override
-	public void onOnHMIStatus(OnHMIStatus notification) {
-		Log.d(TAG, notification.getHmiLevel().toString());
-		if(notification.getHmiLevel().equals(HMILevel.HMI_FULL)){
-			if (notification.getFirstRun()) {
-				// send welcome message if applicable
-				performWelcomeMessage();
-			}
-		}
+    @Override
+    public void onOnHMIStatus(OnHMIStatus notification) {
+        Log.d(TAG, notification.getHmiLevel().toString());
+        if(notification.getHmiLevel().equals(HMILevel.HMI_FULL)){
+            if (notification.getFirstRun()) {
+                // send welcome message if applicable
+                performWelcomeMessage();
+            }
+        }
 
-		if(!notification.getHmiLevel().equals(HMILevel.HMI_NONE)
-				&& firstNonHmiNone){
-			sampleCreateChoiceSet();
-			addCommandsSub();
-			sendCommands1();
-			sendCommands2();
-			sendCommands3();
-			sendCommands4();
-			subButtons();
-			SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
+        if(!notification.getHmiLevel().equals(HMILevel.HMI_NONE)
+                && firstNonHmiNone){
+            sampleCreateChoiceSet();
+//       addCommandsSub();
+            sendCommands1();
+            sendCommands2();
+            sendCommands3();
+//       sendCommands4();
+            subButtons();
+//       SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
 
-			firstNonHmiNone = false;
-			
-			// Other app setup (SubMenu, CreateChoiceSet, etc.) would go here
-		}else{
-			//We have HMI_NONE
-			if(notification.getFirstRun()){
-				uploadImages();
+            firstNonHmiNone = false;
+
+            // Other app setup (SubMenu, CreateChoiceSet, etc.) would go here
+        }else{
+            //We have HMI_NONE
+            if(notification.getFirstRun()){
+                uploadImages();
                 mConnectionHandler.removeCallbacksAndMessages(null);
-			}
-		}
-		
-	}
+            }
+        }
 
-	public void sampleCreateChoiceSet()
-	{
-		int corrId = autoIncCorrId++;
+    }
 
-		Vector<Choice> commands = new Vector<Choice>();
-		Choice one = new Choice();
-		one.setChoiceID(99);
-		one.setMenuName("Um");
-		Vector<String> vrCommands = new Vector<String>();
-		vrCommands.add("Um");
-		vrCommands.add("1");
-		vrCommands.add("numero um");
-		one.setVrCommands(vrCommands);
+    public void sampleCreateChoiceSet()
+    {
+        int corrId = autoIncCorrId++;
 
-		//icon shown to the left on a choice set item
-		Image image1 = new Image();
-		image1.setImageType(ImageType.STATIC);
-		image1.setValue("0x89");
-		one.setImage(image1);
-		commands.add(one);
+        Vector<Choice> commands = new Vector<Choice>();
+        Choice one = new Choice();
+        one.setChoiceID(1);
+        one.setMenuName("Posto América");
+        Vector<String> vrCommands = new Vector<String>();
+        vrCommands.add("América");
+        vrCommands.add("Ame");
+        one.setVrCommands(vrCommands);
 
-		Choice two = new Choice();
-		two.setChoiceID(100);
-		two.setMenuName("Dois");
-		Vector<String> vrCommands2 = new Vector<String>();
-		vrCommands2.add("Dois");
-		vrCommands2.add("2");
-		vrCommands2.add("numero dois");
-		two.setVrCommands(vrCommands2);
+        //icon shown to the left on a choice set item
+        Image image1 = new Image();
+        image1.setImageType(ImageType.STATIC);
+        image1.setValue("0x89");
+        one.setImage(image1);
+        commands.add(one);
 
-		Image image2 = new Image();
-		image2.setImageType(ImageType.STATIC);
-		image2.setValue("0x89");
-		two.setImage(image2);
-		commands.add(two);
+        Choice two = new Choice();
+        two.setChoiceID(2);
+        two.setMenuName("Posto Sul");
+        Vector<String> vrCommands2 = new Vector<String>();
+        vrCommands2.add("Sul");
+        vrCommands2.add("Su");
+        two.setVrCommands(vrCommands2);
 
-		//Build Request and send to proxy object:
-		CreateInteractionChoiceSet msg = new CreateInteractionChoiceSet();
-		msg.setCorrelationID(corrId);
-		int choiceSetID = 101;
-		msg.setInteractionChoiceSetID(choiceSetID);
-		msg.setChoiceSet(commands);
+        Choice tree = new Choice();
+        tree.setChoiceID(3);
+        tree.setMenuName("Posto Brasil");
+        Vector<String> vrCommands3 = new Vector<String>();
+        vrCommands3.add("Brasil");
+        vrCommands3.add("Sil");
+        vrCommands3.add("Bra");
+        tree.setVrCommands(vrCommands3);
 
-		try {
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception Choice");
-			e.printStackTrace();
-		}
-	}
+        Image image2 = new Image();
+        image2.setImageType(ImageType.STATIC);
+        image2.setValue("0x89");
+        two.setImage(image2);
+        commands.add(two);
 
-	public void samplePerformInteraction()
-	{
-		/******Prerequisite CreateInteractionChoiceSet Occurs Prior to PerformInteraction*******/
-		//Build Request and send to proxy object:
-		int corrId = performCorID;
-		PerformInteraction msg = new PerformInteraction();
-		msg.setCorrelationID(corrId);
-		msg.setInitialText("Opções: ");
+        //Build Request and send to proxy object:
+        CreateInteractionChoiceSet msg = new CreateInteractionChoiceSet();
+        msg.setCorrelationID(corrId);
+        int choiceSetID = 101;
+        msg.setInteractionChoiceSetID(choiceSetID);
+        msg.setChoiceSet(commands);
 
-		Vector<TTSChunk> chunksinit = new Vector<TTSChunk>();
-		TTSChunk chunkI = new TTSChunk();
-		chunkI.setText("Por favor, escolha uma opção");
-		chunkI.setType(SpeechCapabilities.TEXT);
-		chunksinit.add(chunkI);
+        try {
+            proxy.sendRPCRequest(msg);
+        } catch (SdlException e) {
+            Log.i(TAG,"sync exception Choice");
+            e.printStackTrace();
+        }
+    }
 
-		msg.setInitialPrompt(chunksinit);
-		msg.setInteractionMode(InteractionMode.BOTH);
+    public void samplePerformInteraction()
+    {
+        /******Prerequisite CreateInteractionChoiceSet Occurs Prior to PerformInteraction*******/
+        //Build Request and send to proxy object:
+        int corrId = performCorID;
+        PerformInteraction msg = new PerformInteraction();
+        msg.setCorrelationID(corrId);
+        msg.setInitialText("Opções: ");
 
-		Vector<Integer> choiceSetIDs = new Vector<Integer>();
-		choiceSetIDs.add(101); // match the ID used in CreateInteractionChoiceSet
-		msg.setInteractionChoiceSetIDList(choiceSetIDs);
+        Vector<TTSChunk> chunksinit = new Vector<TTSChunk>();
+        TTSChunk chunkI = new TTSChunk();
+        chunkI.setText("Por favor, escolha uma opção");
+        chunkI.setType(SpeechCapabilities.TEXT);
+        chunksinit.add(chunkI);
 
-		Vector<TTSChunk> chunksAjuda = new Vector<TTSChunk>();
-		TTSChunk chunkA = new TTSChunk();
-		chunkA.setText("Um ou Dois");
-		chunkA.setType(SpeechCapabilities.TEXT);
-		chunksAjuda.add(chunkA);
+        msg.setInitialPrompt(chunksinit);
+        msg.setInteractionMode(InteractionMode.BOTH);
 
-		Vector<TTSChunk> chunksTimeout = new Vector<TTSChunk>();
-		TTSChunk chunkT = new TTSChunk();
-		chunkT.setText("Timeout");
-		chunkT.setType(SpeechCapabilities.TEXT);
-		chunksTimeout.add(chunkT);
+        Vector<Integer> choiceSetIDs = new Vector<Integer>();
+        choiceSetIDs.add(101); // match the ID used in CreateInteractionChoiceSet
+        msg.setInteractionChoiceSetIDList(choiceSetIDs);
 
-		msg.setHelpPrompt(chunksAjuda);
-		msg.setTimeoutPrompt(chunksTimeout);
-		msg.setTimeout(50000); //min value 5000, max 10000 milliseconds
+        Vector<TTSChunk> chunksAjuda = new Vector<TTSChunk>();
+        TTSChunk chunkA = new TTSChunk();
+        chunkA.setText("Postos");
+        chunkA.setType(SpeechCapabilities.TEXT);
+        chunksAjuda.add(chunkA);
 
-		Vector<VrHelpItem> vrHelpItems = new Vector<VrHelpItem>();
-		VrHelpItem item1 = new VrHelpItem();
-		item1.setText("Um");
-		item1.setPosition(1);
-		VrHelpItem item2 = new VrHelpItem();
-		item2.setText("Dois");
-		item2.setPosition(2);
+        Vector<TTSChunk> chunksTimeout = new Vector<TTSChunk>();
+        TTSChunk chunkT = new TTSChunk();
+        chunkT.setText("Timeout");
+        chunkT.setType(SpeechCapabilities.TEXT);
+        chunksTimeout.add(chunkT);
 
-		vrHelpItems.add(item1);
-		vrHelpItems.add(item2);
-		msg.setVrHelp(vrHelpItems);
+        msg.setHelpPrompt(chunksAjuda);
+        msg.setTimeoutPrompt(chunksTimeout);
+        msg.setTimeout(50000); //min value 5000, max 10000 milliseconds
 
-		try{
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
-		}
-	}
+        Vector<VrHelpItem> vrHelpItems = new Vector<VrHelpItem>();
+        VrHelpItem item1 = new VrHelpItem();
+        item1.setText("Posto América (R$ 4,45)");
+        item1.setPosition(1);
+        VrHelpItem item2 = new VrHelpItem();
+        item2.setText("Posto Sul (R$ 4,35)");
+        item2.setPosition(2);
+        VrHelpItem item3 = new VrHelpItem();
+        item3.setText("Posto Brasil (R$ 4,25)");
+        item3.setPosition(3);
 
+        vrHelpItems.add(item1);
+        vrHelpItems.add(item2);
+        vrHelpItems.add(item3);
+        msg.setVrHelp(vrHelpItems);
 
-	/**
-	 * Will show a sample welcome message on screen as well as speak a sample welcome message
-	 */
-	private void performWelcomeMessage(){
-		try {
-			//Set the welcome message on screen
-
-			Show newShow = new Show();
-			newShow.setCorrelationID(autoIncCorrId++);
-			Image newImage = new Image();
-			newImage.setValue(ICON_FILENAME);
-			newImage.setImageType(ImageType.DYNAMIC);
-			newShow.setGraphic(newImage);
-			newShow.setMainField1(APP_NAME);
-			newShow.setMainField2(WELCOME_SHOW);
-
-			SoftButton newSB = new SoftButton();
-			newSB.setSoftButtonID(1);
-
-			newSB.setType(SoftButtonType.SBT_BOTH);
-
-			Image newImg = new Image();
-			newImg.setValue(ICON_FILENAME);
-			newImg.setImageType(ImageType.DYNAMIC);
-			newSB.setImage(newImg);
-			newSB.setText("Home");
-			Vector<SoftButton> softButtons = new Vector<SoftButton>();
-			softButtons.add(newSB);
-			newShow.setSoftButtons(softButtons);
-
-			proxy.sendRPCRequest(newShow);
-
-			//Say the welcome message
-			proxy.speak(WELCOME_SPEAK, autoIncCorrId++);
-			
-		} catch (SdlException e) {
-			e.printStackTrace();
-		}
-		
-	}
-
-	public void sampleGetVehicleData()
-	{
-		//Build Request and send to proxy object:
-		int corrId = autoIncCorrId++;
-		GetVehicleData msg = new GetVehicleData();
-		msg.setCorrelationID(corrId);
-		//Location functional group
-		msg.setSpeed(true);
-		msg.setGps(false);
-
-		//VechicleInfo functional group
-		msg.setFuelLevel(false);
-		msg.setFuelLevel_State(false);
-		msg.setInstantFuelConsumption(false);
-		msg.setExternalTemperature(false);
-		msg.setTirePressure(false);
-		msg.setOdometer(false);
-		msg.setVin(false);
-
-		//DrivingCharacteristics functional group
-		msg.setBeltStatus(false);
-		msg.setDriverBraking(false);
-		msg.setPrndl(false);
-		msg.setRpm(false);
-
-		try{
-			proxy.sendRPCRequest(msg);
-		}
-		catch (SdlException e) {
-			Log.i(TAG,"sync exception Vhicledata");
-			e.printStackTrace();
-		}
-	}
+        try{
+            proxy.sendRPCRequest(msg);
+        } catch (SdlException e) {
+            Log.i(TAG,"sync exception");
+            e.printStackTrace();
+        }
+    }
 
 
-	/**
-	 *  Requests list of images to SDL, and uploads images that are missing.
-	 */
-	private void uploadImages(){
-		ListFiles listFiles = new ListFiles();
-		this.sendRpcRequest(listFiles);
-		
-	}
+    /**
+     * Will show a sample welcome message on screen as well as speak a sample welcome message
+     */
+    private void performWelcomeMessage(){
+        try {
+            //Set the welcome message on screen
 
-	@Override
-	public void onListFilesResponse(ListFilesResponse response) {
-		Log.i(TAG, "onListFilesResponse from SDL ");
-		if(response.getSuccess()){
-			remoteFiles = response.getFilenames();
-		}
-		
-		// Check the mutable set for the AppIcon
-	    // If not present, upload the image
-		if(remoteFiles== null || !remoteFiles.contains(SdlService.ICON_FILENAME)){
-			try {
-				sendIcon();
-			} catch (SdlException e) {
-				e.printStackTrace();
-			}
-		}else{
-			// If the file is already present, send the SetAppIcon request
-			try {
-				proxy.setappicon(ICON_FILENAME, autoIncCorrId++);
-			} catch (SdlException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+            Show newShow = new Show();
+            newShow.setCorrelationID(autoIncCorrId++);
+            Image newImage = new Image();
+            newImage.setValue(ICON_FILENAME);
+            newImage.setImageType(ImageType.DYNAMIC);
+            newShow.setGraphic(newImage);
+            newShow.setMainField1(APP_NAME);
+            newShow.setMainField2(WELCOME_SHOW);
 
-	@Override
-	public void onPutFileResponse(PutFileResponse response) {
-		Log.i(TAG, "onPutFileResponse from SDL");
-		if(response.getCorrelationID() == iconCorrelationId){ //If we have successfully uploaded our icon, we want to set it
-			try {
-				proxy.setappicon(ICON_FILENAME, autoIncCorrId++);
-			} catch (SdlException e) {
-				e.printStackTrace();
-			}
-		}
+            SoftButton newSB = new SoftButton();
+            newSB.setSoftButtonID(1);
 
-	}
-	
-	@Override
-	public void onOnLockScreenNotification(OnLockScreenStatus notification) {
-		LockScreenActivity.updateLockScreenStatus(notification.getShowLockScreen());
-	}
+            newSB.setType(SoftButtonType.SBT_BOTH);
 
-	@Override
-	public void onOnCommand(OnCommand notification){
-		Integer id = notification.getCmdID();
-		if(id != null){
-			switch(id){
-			case TEST_COMMAND_ID1:
-				showscrollablemessage();
-				break;
-			case TEST_COMMAND_ID2:
-				samplePerformInteraction();
-				break;
-			case TEST_COMMAND_ID3:
-				try {
-					proxy.alert("Olá, este é o Aplicativo Ford","Olá", "Aplicativo Ford",null,true,5000,null,autoIncCorrId++);
-				} catch (SdlException e) {
-					e.printStackTrace();
-				}
-				break;
-			case TEST_COMMAND_ID4:
-				try {
-					proxy.setdisplaylayout("TEXTBUTTONS_WITH_GRAPHIC", autoIncCorrId++);
-				} catch (SdlException e) {
-					e.printStackTrace();
-				}
-				break;
-			case COMMAND_1:
-				sampleGetVehicleData();
-				break;
-			}
+            Image newImg = new Image();
+            newImg.setValue(ICON_FILENAME);
+            newImg.setImageType(ImageType.DYNAMIC);
+            newSB.setImage(newImg);
+            newSB.setText("Home");
+            Vector<SoftButton> softButtons = new Vector<SoftButton>();
+            softButtons.add(newSB);
+            newShow.setSoftButtons(softButtons);
 
-		}
-	}
+            proxy.sendRPCRequest(newShow);
 
-	/**
-	 *  Callback method that runs when the add command response is received from SDL.
-	 */
-	@Override
-	public void onAddCommandResponse(AddCommandResponse response) {
-		Log.i(TAG, "AddCommand response from SDL: " + response.getResultCode().name());
+            //Say the welcome message
+            proxy.speak(WELCOME_SPEAK, autoIncCorrId++);
 
-	}
+        } catch (SdlException e) {
+            e.printStackTrace();
+        }
 
-	
-	/*  Vehicle Data   */
-	
-	
-	@Override
-	public void onOnPermissionsChange(OnPermissionsChange notification) {
-		Log.i(TAG, "Permision changed: " + notification);
-	}
-		
-	@Override
-	public void onSubscribeVehicleDataResponse(SubscribeVehicleDataResponse response) {
-		if(response.getSuccess()){
-			Log.i(TAG, "Subscribed to vehicle data");
-			this.isVehicleDataSubscribed = true;
-		}
-	}
-	
-	@Override
-	public void onOnVehicleData(OnVehicleData notification) {
-		Log.i(TAG, "Vehicle data notification from SDL");
-		//TODO Put your vehicle data code here
-		//ie, notification.getSpeed().
+    }
 
-	}
-	
-	/**
-	 * Rest of the SDL callbacks from the head unit
-	 */
-	
-	@Override
-	public void onAddSubMenuResponse(AddSubMenuResponse response) {
+    public void sampleGetVehicleData()
+    {
+        //Build Request and send to proxy object:
+        int corrId = autoIncCorrId++;
+        GetVehicleData msg = new GetVehicleData();
+        msg.setCorrelationID(corrId);
+        //Location functional group
+        msg.setSpeed(true);
+        msg.setGps(false);
+
+        //VechicleInfo functional group
+        msg.setFuelLevel(false);
+        msg.setFuelLevel_State(false);
+        msg.setInstantFuelConsumption(false);
+        msg.setExternalTemperature(false);
+        msg.setTirePressure(false);
+        msg.setOdometer(false);
+        msg.setVin(false);
+
+        //DrivingCharacteristics functional group
+        msg.setBeltStatus(false);
+        msg.setDriverBraking(false);
+        msg.setPrndl(false);
+        msg.setRpm(false);
+
+        try{
+            proxy.sendRPCRequest(msg);
+        }
+        catch (SdlException e) {
+            Log.i(TAG,"sync exception Vhicledata");
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     *  Requests list of images to SDL, and uploads images that are missing.
+     */
+    private void uploadImages(){
+        ListFiles listFiles = new ListFiles();
+        this.sendRpcRequest(listFiles);
+
+    }
+
+    @Override
+    public void onListFilesResponse(ListFilesResponse response) {
+        Log.i(TAG, "onListFilesResponse from SDL ");
+        if(response.getSuccess()){
+            remoteFiles = response.getFilenames();
+        }
+
+        // Check the mutable set for the AppIcon
+        // If not present, upload the image
+        if(remoteFiles== null || !remoteFiles.contains(SdlService.ICON_FILENAME)){
+            try {
+                sendIcon();
+            } catch (SdlException e) {
+                e.printStackTrace();
+            }
+        }else{
+            // If the file is already present, send the SetAppIcon request
+            try {
+                proxy.setappicon(ICON_FILENAME, autoIncCorrId++);
+            } catch (SdlException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onPutFileResponse(PutFileResponse response) {
+        Log.i(TAG, "onPutFileResponse from SDL");
+        if(response.getCorrelationID() == iconCorrelationId){ //If we have successfully uploaded our icon, we want to set it
+            try {
+                proxy.setappicon(ICON_FILENAME, autoIncCorrId++);
+            } catch (SdlException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    @Override
+    public void onOnLockScreenNotification(OnLockScreenStatus notification) {
+        LockScreenActivity.updateLockScreenStatus(notification.getShowLockScreen());
+    }
+
+    @Override
+    public void onOnCommand(OnCommand notification){
+        Integer id = notification.getCmdID();
+        if(id != null){
+            switch(id){
+                case TEST_COMMAND_ID1:
+                    showscrollablemessage();
+                    break;
+                case TEST_COMMAND_ID2:
+                    samplePerformInteraction();
+                    break;
+                case TEST_COMMAND_ID3:
+                    try {
+                        proxy.alert("Olá, este é o Aplicativo AchePosto, abasteça com facilidade!","Olá", "Aplicativo AchePosto",null,true,5000,null,autoIncCorrId++);
+                    } catch (SdlException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case TEST_COMMAND_ID4:
+                    try {
+                        proxy.setdisplaylayout("TEXTBUTTONS_WITH_GRAPHIC", autoIncCorrId++);
+                    } catch (SdlException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case COMMAND_1:
+                    sampleGetVehicleData();
+                    break;
+            }
+
+        }
+    }
+
+    /**
+     *  Callback method that runs when the add command response is received from SDL.
+     */
+    @Override
+    public void onAddCommandResponse(AddCommandResponse response) {
+        Log.i(TAG, "AddCommand response from SDL: " + response.getResultCode().name());
+
+    }
+
+
+   /*  Vehicle Data   */
+
+
+    @Override
+    public void onOnPermissionsChange(OnPermissionsChange notification) {
+        Log.i(TAG, "Permision changed: " + notification);
+    }
+
+    @Override
+    public void onSubscribeVehicleDataResponse(SubscribeVehicleDataResponse response) {
+        if(response.getSuccess()){
+            Log.i(TAG, "Subscribed to vehicle data");
+            this.isVehicleDataSubscribed = true;
+        }
+    }
+
+    @Override
+    public void onOnVehicleData(OnVehicleData notification) {
+        Log.i(TAG, "Vehicle data notification from SDL");
+        //TODO Put your vehicle data code here
+        //ie, notification.getSpeed().
+
+    }
+
+    /**
+     * Rest of the SDL callbacks from the head unit
+     */
+
+    @Override
+    public void onAddSubMenuResponse(AddSubMenuResponse response) {
         Log.i(TAG, "AddSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-		boolean bSuccess = response.getSuccess();
+        boolean bSuccess = response.getSuccess();
 
-		// Create and build an AddCommand RPC
-		AddCommand msg = new AddCommand();
-		msg.setCmdID(COMMAND_1);
-		String menuName = "Velocidade";
-		MenuParams menuParams = new MenuParams();
-		menuParams.setMenuName(menuName);
+        // Create and build an AddCommand RPC
+        AddCommand msg = new AddCommand();
+        msg.setCmdID(COMMAND_1);
+        String menuName = "Velocidade";
+        MenuParams menuParams = new MenuParams();
+        menuParams.setMenuName(menuName);
 
-		// Set the parent ID to the submenu that was added only if the response was SUCCESS
-		if (bSuccess) {
-			menuParams.setParentID(SUBMENU_1);
-		}
-		msg.setMenuParams(menuParams);
+        // Set the parent ID to the submenu that was added only if the response was SUCCESS
+        if (bSuccess) {
+            menuParams.setParentID(SUBMENU_1);
+        }
+        msg.setMenuParams(menuParams);
 
-		// Build voice recognition commands
-		Vector<String> vrCommands = new Vector<String>();
-		vrCommands.add("Velocidade");
-		vrCommands.add("Velocidade do veiculo");
-		msg.setVrCommands(vrCommands);
+        // Build voice recognition commands
+        Vector<String> vrCommands = new Vector<String>();
+        vrCommands.add("Velocidade");
+        vrCommands.add("Velocidade do veiculo");
+        msg.setVrCommands(vrCommands);
 
-		// Set the correlation ID
-		int correlationId = autoIncCorrId++;
-		msg.setCorrelationID(correlationId);
+        // Set the correlation ID
+        int correlationId = autoIncCorrId++;
+        msg.setCorrelationID(correlationId);
 
-		// Send to proxy
-		try {
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
-		}
+        // Send to proxy
+        try {
+            proxy.sendRPCRequest(msg);
+        } catch (SdlException e) {
+            Log.i(TAG,"sync exception");
+            e.printStackTrace();
+        }
 
-	}
+    }
 
-	@Override
-	public void onCreateInteractionChoiceSetResponse(CreateInteractionChoiceSetResponse response) {
+    @Override
+    public void onCreateInteractionChoiceSetResponse(CreateInteractionChoiceSetResponse response) {
         Log.i(TAG, "CreateInteractionChoiceSet response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onAlertResponse(AlertResponse response) {
+    @Override
+    public void onAlertResponse(AlertResponse response) {
         Log.i(TAG, "Alert response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onDeleteCommandResponse(DeleteCommandResponse response) {
+    @Override
+    public void onDeleteCommandResponse(DeleteCommandResponse response) {
         Log.i(TAG, "DeleteCommand response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onDeleteInteractionChoiceSetResponse(DeleteInteractionChoiceSetResponse response) {
+    @Override
+    public void onDeleteInteractionChoiceSetResponse(DeleteInteractionChoiceSetResponse response) {
         Log.i(TAG, "DeleteInteractionChoiceSet response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onDeleteSubMenuResponse(DeleteSubMenuResponse response) {
+    @Override
+    public void onDeleteSubMenuResponse(DeleteSubMenuResponse response) {
         Log.i(TAG, "DeleteSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onPerformInteractionResponse(PerformInteractionResponse response) {
-        Log.i(TAG, "PerformInteraction response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-		Log.d(TAG,"S onPerformInteractionResponse" + response.getResultCode() + response.getCorrelationID() + " " + response.getChoiceID());
-		Log.d(TAG, response.getInfo());
+    @Override
+    public void onPerformInteractionResponse(PerformInteractionResponse response) {
+//        Log.i(TAG, "PerformInteraction response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
+//    Log.d(TAG,"S onPerformInteractionResponse" + response.getResultCode() + response.getCorrelationID() + " " + response.getChoiceID());
+//    Log.d(TAG, response.getInfo());
 
-		if(response.getCorrelationID() ==  performCorID) {
-			switch(response.getChoiceID())
-			{
-				case 99:
-					Log.d(TAG, "Case 99" );
-					break;
-				case 100:
-					Log.d(TAG, "Case 100" );
-					break;
-				default:
-					return;
-			}
-		}
-	}
+        if(response.getCorrelationID() ==  performCorID) {
+            switch(response.getChoiceID())
+            {
+                case 1:
 
-	@Override
-	public void onResetGlobalPropertiesResponse(
-			ResetGlobalPropertiesResponse response) {
+                    SendLocation msg1 = new SendLocation();
+                    msg1.setCorrelationID(autoIncCorrId++);
+
+//             msg1.setLocationName("America");
+//             msg1.setLatitudeDegrees(-38.309060);
+//             msg1.setLongitudeDegrees(-12.682459);
+                    msg1.setParameters("locationName", "Sul");
+                    msg1.setParameters("longitudeDegrees", -38.309060);
+                    msg1.setParameters("latitudeDegrees", -12.682459);
+
+                    try {
+                        proxy.sendRPCRequest(msg1);
+                    } catch (SdlException e) {
+                        e.printStackTrace();
+                    }
+
+                    Log.d(TAG, "Case 1" );
+                    break;
+                case 2:
+
+                    SendLocation msg2 = new SendLocation();
+                    msg2.setCorrelationID(autoIncCorrId++);
+
+                    msg2.setParameters("locationName", "Sul");
+                    msg2.setParameters("LongitudeDegrees", -38.309060);
+                    msg2.setParameters("LatitudeDegrees", -12.682459);
+
+                    try {
+                        proxy.sendRPCRequest(msg2);
+                    } catch (SdlException e) {
+                        e.printStackTrace();
+                    }
+
+                    Log.d(TAG, "Case 2" );
+                    break;
+                case 3:
+                    SendLocation msg3 = new SendLocation();
+                    msg3.setCorrelationID(autoIncCorrId++);
+
+                    msg3.setParameters("locationName", "Brasil");
+                    msg3.setParameters("LongitudeDegrees",-38.309060);
+                    msg3.setParameters("LatitudeDegrees", -12.682459);
+
+                    try {
+                        proxy.sendRPCRequest(msg3);
+                    } catch (SdlException e) {
+                        e.printStackTrace();
+                    }
+
+                    Log.d(TAG, "Case 3" );
+                    break;
+                default:
+                    return;
+            }
+        }
+    }
+
+    @Override
+    public void onResetGlobalPropertiesResponse(
+            ResetGlobalPropertiesResponse response) {
         Log.i(TAG, "ResetGlobalProperties response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onSetGlobalPropertiesResponse(SetGlobalPropertiesResponse response) {
+    @Override
+    public void onSetGlobalPropertiesResponse(SetGlobalPropertiesResponse response) {
         Log.i(TAG, "SetGlobalProperties response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onSetMediaClockTimerResponse(SetMediaClockTimerResponse response) {
+    @Override
+    public void onSetMediaClockTimerResponse(SetMediaClockTimerResponse response) {
         Log.i(TAG, "SetMediaClockTimer response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onShowResponse(ShowResponse response) {
+    @Override
+    public void onShowResponse(ShowResponse response) {
         Log.i(TAG, "Show response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onSpeakResponse(SpeakResponse response) {
+    @Override
+    public void onSpeakResponse(SpeakResponse response) {
         Log.i(TAG, "SpeakCommand response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onOnButtonEvent(OnButtonEvent notification) {
+    @Override
+    public void onOnButtonEvent(OnButtonEvent notification) {
         Log.i(TAG, "OnButtonEvent notification from SDL: " + notification);
-	}
+    }
 
-	@Override
-	public void onOnButtonPress(OnButtonPress notification) {
+    @Override
+    public void onOnButtonPress(OnButtonPress notification) {
         Log.i(TAG, "OnButtonPress notification from SDL: " + notification);
-		switch (notification.getButtonName()) {
-			case CUSTOM_BUTTON:
-					switch (notification.getCustomButtonName()) {
-						case 1: // rss icon was pressed on main screen
-							Log.i(TAG, "start was pressed");
-							try {
-								proxy.setdisplaylayout("TILES_WITH_GRAPHIC", autoIncCorrId++);
-							} catch (SdlException e) {
-								Log.i(TAG,"sync exception");
-								e.printStackTrace();
-							}
-							break;
-					}
-				break;
-			case OK:
-				SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
-				//mediaPlayer.release();
-				//mediaPlayer = new MediaPlayer();
-				//mediaPlayer.reset();
-				break;
-		}
-	}
+        switch (notification.getButtonName()) {
+            case CUSTOM_BUTTON:
+                switch (notification.getCustomButtonName()) {
+                    case 1: // rss icon was pressed on main screen
+                        Log.i(TAG, "start was pressed");
+                        try {
+                            proxy.setdisplaylayout("TILES_WITH_GRAPHIC", autoIncCorrId++);
+                        } catch (SdlException e) {
+                            Log.i(TAG,"sync exception");
+                            e.printStackTrace();
+                        }
+                        break;
+                }
+                break;
+            case OK:
+//          SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
+                //mediaPlayer.release();
+                //mediaPlayer = new MediaPlayer();
+                //mediaPlayer.reset();
+                break;
+        }
+    }
 
-	@Override
-	public void onSubscribeButtonResponse(SubscribeButtonResponse response) {
+    @Override
+    public void onSubscribeButtonResponse(SubscribeButtonResponse response) {
         Log.i(TAG, "SubscribeButton response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	@Override
-	public void onUnsubscribeButtonResponse(UnsubscribeButtonResponse response) {
+    @Override
+    public void onUnsubscribeButtonResponse(UnsubscribeButtonResponse response) {
         Log.i(TAG, "UnsubscribeButton response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
 
-	@Override
-	public void onOnTBTClientState(OnTBTClientState notification) {
+    @Override
+    public void onOnTBTClientState(OnTBTClientState notification) {
         Log.i(TAG, "OnTBTClientState notification from SDL: " + notification);
-	}
+    }
 
-	@Override
-	public void onUnsubscribeVehicleDataResponse(
-			UnsubscribeVehicleDataResponse response) {
+    @Override
+    public void onUnsubscribeVehicleDataResponse(
+            UnsubscribeVehicleDataResponse response) {
         Log.i(TAG, "UnsubscribeVehicleData response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onGetVehicleDataResponse(GetVehicleDataResponse response) {
-		if (response.getResultCode() == Result.DISALLOWED) {
-			Log.i(TAG, "onGetVehicleDataResponse read disallowed");
-			try {
-				proxy.show("VehicleData Policy", "Disallowed", null, autoIncCorrId++);
-			} catch (SdlException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return;
-		} else if (response.getResultCode() == Result.USER_DISALLOWED) {
-			Log.i(TAG, "VehicleData read user disallowed");
-			try {
-				proxy.show("VehicleData User", "Disallowed", null, autoIncCorrId++);
-			} catch (SdlException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return;
-		}
+    @Override
+    public void onGetVehicleDataResponse(GetVehicleDataResponse response) {
+        if (response.getResultCode() == Result.DISALLOWED) {
+            Log.i(TAG, "onGetVehicleDataResponse read disallowed");
+            try {
+                proxy.show("VehicleData Policy", "Disallowed", null, autoIncCorrId++);
+            } catch (SdlException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return;
+        } else if (response.getResultCode() == Result.USER_DISALLOWED) {
+            Log.i(TAG, "VehicleData read user disallowed");
+            try {
+                proxy.show("VehicleData User", "Disallowed", null, autoIncCorrId++);
+            } catch (SdlException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return;
+        }
 
-		try {
-			if (response.getSpeed() != null) {
-				speed = response.getSpeed().toString();
-				try {
-					proxy.show("Velocidade: ", speed.toString(), null, autoIncCorrId++);
-				} catch (SdlException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else {
-				speed = "--";
-			}
-		} catch (Exception e) {
-			Log.e(TAG, "onvehicledata error" + e);
-			e.printStackTrace();
-		}
-	}
+        try {
+            if (response.getSpeed() != null) {
+                speed = response.getSpeed().toString();
+                try {
+                    proxy.show("Velocidade: ", speed.toString(), null, autoIncCorrId++);
+                } catch (SdlException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            } else {
+                speed = "--";
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "onvehicledata error" + e);
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public void onReadDIDResponse(ReadDIDResponse response) {
+    @Override
+    public void onReadDIDResponse(ReadDIDResponse response) {
         Log.i(TAG, "ReadDID response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onGetDTCsResponse(GetDTCsResponse response) {
+    @Override
+    public void onGetDTCsResponse(GetDTCsResponse response) {
         Log.i(TAG, "GetDTCs response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
 
-	@Override
-	public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse response) {
+    @Override
+    public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse response) {
         Log.i(TAG, "PerformAudioPassThru response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
+    @Override
+    public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
         Log.i(TAG, "EndAudioPassThru response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onOnAudioPassThru(OnAudioPassThru notification) {
+    @Override
+    public void onOnAudioPassThru(OnAudioPassThru notification) {
         Log.i(TAG, "OnAudioPassThru notification from SDL: " + notification );
 
-	}
+    }
 
-	@Override
-	public void onDeleteFileResponse(DeleteFileResponse response) {
+    @Override
+    public void onDeleteFileResponse(DeleteFileResponse response) {
         Log.i(TAG, "DeleteFile response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onSetAppIconResponse(SetAppIconResponse response) {
+    @Override
+    public void onSetAppIconResponse(SetAppIconResponse response) {
         Log.i(TAG, "SetAppIcon response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onScrollableMessageResponse(ScrollableMessageResponse response) {
+    @Override
+    public void onScrollableMessageResponse(ScrollableMessageResponse response) {
         Log.i(TAG, "ScrollableMessage response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onChangeRegistrationResponse(ChangeRegistrationResponse response) {
+    @Override
+    public void onChangeRegistrationResponse(ChangeRegistrationResponse response) {
         Log.i(TAG, "ChangeRegistration response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onSetDisplayLayoutResponse(SetDisplayLayoutResponse response) {
+    @Override
+    public void onSetDisplayLayoutResponse(SetDisplayLayoutResponse response) {
         Log.i(TAG, "SetDisplayLayout response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onOnLanguageChange(OnLanguageChange notification) {
+    @Override
+    public void onOnLanguageChange(OnLanguageChange notification) {
         Log.i(TAG, "OnLanguageChange notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onSliderResponse(SliderResponse response) {
+    @Override
+    public void onSliderResponse(SliderResponse response) {
         Log.i(TAG, "Slider response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
 
-	@Override
-	public void onOnHashChange(OnHashChange notification) {
+    @Override
+    public void onOnHashChange(OnHashChange notification) {
         Log.i(TAG, "OnHashChange notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onOnSystemRequest(OnSystemRequest notification) {
+    @Override
+    public void onOnSystemRequest(OnSystemRequest notification) {
         Log.i(TAG, "OnSystemRequest notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onSystemRequestResponse(SystemRequestResponse response) {
+    @Override
+    public void onSystemRequestResponse(SystemRequestResponse response) {
         Log.i(TAG, "SystemRequest response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onOnKeyboardInput(OnKeyboardInput notification) {
+    @Override
+    public void onOnKeyboardInput(OnKeyboardInput notification) {
         Log.i(TAG, "OnKeyboardInput notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onOnTouchEvent(OnTouchEvent notification) {
+    @Override
+    public void onOnTouchEvent(OnTouchEvent notification) {
         Log.i(TAG, "OnTouchEvent notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onDiagnosticMessageResponse(DiagnosticMessageResponse response) {
+    @Override
+    public void onDiagnosticMessageResponse(DiagnosticMessageResponse response) {
         Log.i(TAG, "DiagnosticMessage response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onOnStreamRPC(OnStreamRPC notification) {
+    @Override
+    public void onOnStreamRPC(OnStreamRPC notification) {
         Log.i(TAG, "OnStreamRPC notification from SDL: " + notification);
 
-	}
+    }
 
-	@Override
-	public void onStreamRPCResponse(StreamRPCResponse response) {
+    @Override
+    public void onStreamRPCResponse(StreamRPCResponse response) {
         Log.i(TAG, "StreamRPC response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onDialNumberResponse(DialNumberResponse response) {
+    @Override
+    public void onDialNumberResponse(DialNumberResponse response) {
         Log.i(TAG, "DialNumber response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onSendLocationResponse(SendLocationResponse response) {
+    @Override
+    public void onSendLocationResponse(SendLocationResponse response) {
         Log.i(TAG, "SendLocation response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onServiceEnded(OnServiceEnded serviceEnded) {
+    @Override
+    public void onServiceEnded(OnServiceEnded serviceEnded) {
 
-	}
+    }
 
-	@Override
-	public void onServiceNACKed(OnServiceNACKed serviceNACKed) {
+    @Override
+    public void onServiceNACKed(OnServiceNACKed serviceNACKed) {
 
-	}
+    }
 
-	@Override
-	public void onShowConstantTbtResponse(ShowConstantTbtResponse response) {
+    @Override
+    public void onShowConstantTbtResponse(ShowConstantTbtResponse response) {
         Log.i(TAG, "ShowConstantTbt response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onAlertManeuverResponse(AlertManeuverResponse response) {
+    @Override
+    public void onAlertManeuverResponse(AlertManeuverResponse response) {
         Log.i(TAG, "AlertManeuver response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onUpdateTurnListResponse(UpdateTurnListResponse response) {
+    @Override
+    public void onUpdateTurnListResponse(UpdateTurnListResponse response) {
         Log.i(TAG, "UpdateTurnList response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-	}
+    }
 
-	@Override
-	public void onServiceDataACK() {
+    @Override
+    public void onServiceDataACK() {
 
-	}
-	
-	@Override
-	public void onOnDriverDistraction(OnDriverDistraction notification) {
-		// Some RPCs (depending on region) cannot be sent when driver distraction is active.
-	}
+    }
 
-	@Override
-	public void onError(String info, Exception e) {
-	}
+    @Override
+    public void onOnDriverDistraction(OnDriverDistraction notification) {
+        // Some RPCs (depending on region) cannot be sent when driver distraction is active.
+    }
 
-	@Override
-	public void onGenericResponse(GenericResponse response) {
+    @Override
+    public void onError(String info, Exception e) {
+    }
+
+    @Override
+    public void onGenericResponse(GenericResponse response) {
         Log.i(TAG, "Generic response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-	}
+    }
 
-	private Runnable mCheckConnectionRunnable = new Runnable() {
-		@Override
-		public void run() {
+    private Runnable mCheckConnectionRunnable = new Runnable() {
+        @Override
+        public void run() {
             stopSelf();
-		}
-	};
+        }
+    };
 
 }
