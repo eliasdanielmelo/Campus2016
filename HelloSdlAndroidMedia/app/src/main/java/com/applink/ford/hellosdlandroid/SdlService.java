@@ -662,8 +662,8 @@ public class SdlService extends Service implements IProxyListenerALM {
         GetVehicleData msg = new GetVehicleData();
         msg.setCorrelationID(corrId);
         //Location functional group
-        msg.setSpeed(true);
-        msg.setGps(false);
+        msg.setSpeed(false);
+        msg.setGps(true);
 
         //VechicleInfo functional group
         msg.setFuelLevel(false);
@@ -806,6 +806,8 @@ public class SdlService extends Service implements IProxyListenerALM {
         Log.i(TAG, "Vehicle data notification from SDL");
         //TODO Put your vehicle data code here
         //ie, notification.getSpeed().
+
+
 
     }
 
@@ -1048,12 +1050,14 @@ public class SdlService extends Service implements IProxyListenerALM {
         }
 
         try {
-            if (response.getSpeed() != null) {
-                speed = response.getSpeed().toString();
+            if (response.getGps() != null) {
+                double lat = response.getGps().getLatitudeDegrees();
+                double lon = response.getGps().getLongitudeDegrees();
+
                 try {
-                    proxy.show("Velocidade: ", speed.toString(), null, autoIncCorrId++);
+                    proxy.alert("Olá, você está na longitude " + lon + " e na latitude " + lat,null,autoIncCorrId++);
+                    Log.i(TAG,"lat "+lat + "logn "+lon );
                 } catch (SdlException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             } else {
